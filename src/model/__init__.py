@@ -1,0 +1,1 @@
+from src.model.naive_bayes import NaiveBayes

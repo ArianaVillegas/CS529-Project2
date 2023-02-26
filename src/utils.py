@@ -1,9 +1,10 @@
 import numpy as np
+from scipy.sparse import csr_matrix, vstack
 
 
 def MLE(labels):
     """
-    Quick utility that estiamte MLE for all the classes in labels.
+    Utility that estiamte MLE for all the classes in labels.
     
     Parameters
     ----------
@@ -13,27 +14,36 @@ def MLE(labels):
     -------
     mle: serie with different class values and their MLE.
     """
-    return labels.value_counts(normalize=True)
+    size = labels.shape[0]
+    _, counts = np.unique(labels, return_counts=True)
+    return counts/size
 
 
-def MAP(df):
+def MAP(x, y, beta=None):
     """
-    Quick utility that estiamte MAP for all word given a class.
+    Utility that estiamte MAP for all word given a class.
     
     Parameters
     ----------
-    df : Dataframe with words repetitions and the last column has
-    the label of the class.
+    x : data with the number of repetitions by word in the vocabulary.
+    y : labels for each element in the data.
+    beta: beta prior that add extra observation for each feature.
     
     Returns
     -------
-    map: dataframe of all the vocabulary given an specific class.
+    map: data of all the vocabulary given an specific class.
     """
-    size = len(df.columns)
-    alpha = 1 + 1/size
-    doc_count = df.groupby(by=[df.columns[-1]]).sum()
-    df_nom = doc_count + (alpha-1)
-    df_den = df_nom + ((alpha-1) * size)
-    df_map = df_nom.div(df_den, axis=0)
-    return df_map
+    y = np.append(y, np.reshape(np.arange(y.shape[0]), newshape=y.shape), axis=1)
+    y = y[y[:, 0].argsort()]
+    y_idx = np.split(y[:,1], np.unique(y[:,0], return_index=True)[1][1:])
+    
+    size = x.shape[1]
+    beta = 1/size if beta == None else beta
+    alpha = 1 + beta
+    doc_count = np.concatenate([np.array(x[idx,:].sum(axis=0)) for idx in y_idx])
+    
+    nom = doc_count + (alpha-1)
+    den = np.reshape(np.sum(doc_count, axis=1) + ((alpha-1) * size), newshape=(nom.shape[0], 1))
+    map_ = np.divide(nom, den)
+    return map_
     
