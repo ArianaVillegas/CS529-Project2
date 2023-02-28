@@ -1,6 +1,7 @@
 import argparse
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 
 from src.model import NaiveBayes
@@ -24,6 +25,21 @@ if __name__ == '__main__':
     train_x, train_y = train_array[:,1:-1], train_array[:,-1]
     scores = cross_validation_split(train_x, train_y, NaiveBayes())
     print(f'Accuracy: {np.round(np.mean(scores)*100, 2)}%')
+    
+    b_acc = []
+    b_val = [0.00001, 0.0001, 0.001, 0.01, 0.1, 1]
+    for b in b_val:
+        scores = cross_validation_split(train_x, train_y, NaiveBayes(beta=b))
+        b_acc.append(np.mean(scores))
+    plt.plot(np.array(b_val), np.array(b_acc)*100)
+    plt.xscale('log')
+    plt.xlabel('Beta', fontsize=18)
+    plt.ylabel('Accuracy', fontsize=18)
+    plt.xticks(fontsize=18)
+    plt.yticks(fontsize=18)
+    plt.tight_layout()
+    plt.savefig('b_acc.png')
+    
     
     train_x, val_x, train_y, val_y = train_test_split(train_x, train_y, test_size=0.3, random_state=42)
     train_y = train_y.toarray()
