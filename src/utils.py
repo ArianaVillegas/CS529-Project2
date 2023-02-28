@@ -1,49 +1,33 @@
-import numpy as np
-from scipy.sparse import csr_matrix, vstack
+import matplotlib.pyplot as plt
+from sklearn.model_selection import KFold
+from sklearn.metrics import confusion_matrix
 
 
-def MLE(labels):
-    """
-    Utility that estiamte MLE for all the classes in labels.
-    
-    Parameters
-    ----------
-    *labels : serie with the labels of the classes in a dataset.
-    
-    Returns
-    -------
-    mle: serie with different class values and their MLE.
-    """
-    size = labels.shape[0]
-    _, counts = np.unique(labels, return_counts=True)
-    return counts/size
+def cross_validation_split(X, y, model, n_splits=10):
+    cv = KFold(n_splits=n_splits, random_state=42, shuffle=True)
+    scores = []
+    for train_ix, val_ix in cv.split(X):
+        X_train, X_val = X[train_ix, :], X[val_ix, :]
+        y_train, y_val = y[train_ix], y[val_ix]
+        y_train = y_train.toarray()
+        y_val = y_val.toarray()
+        model.train(X_train, y_train)
+        y_val_pred = model.eval(X_val)
+        scores.append((y_val==y_val_pred).mean())
+    return scores
 
 
-def MAP(x, y, beta=None):
-    """
-    Utility that estiamte MAP for all word given a class.
-    
-    Parameters
-    ----------
-    x : data with the number of repetitions by word in the vocabulary.
-    y : labels for each element in the data.
-    beta: beta prior that add extra observation for each feature.
-    
-    Returns
-    -------
-    map: data of all the vocabulary given an specific class.
-    """
-    y = np.append(y, np.reshape(np.arange(y.shape[0]), newshape=y.shape), axis=1)
-    y = y[y[:, 0].argsort()]
-    y_idx = np.split(y[:,1], np.unique(y[:,0], return_index=True)[1][1:])
-    
-    size = x.shape[1]
-    beta = 1/size if beta == None else beta
-    alpha = 1 + beta
-    doc_count = np.concatenate([np.array(x[idx,:].sum(axis=0)) for idx in y_idx])
-    
-    nom = doc_count + (alpha-1)
-    den = np.reshape(np.sum(doc_count, axis=1) + ((alpha-1) * size), newshape=(nom.shape[0], 1))
-    map_ = np.divide(nom, den)
-    return map_
-    
+def plot_confussion_matrix(y, pred, labels, filename):
+    cm = confusion_matrix(y, pred, normalize='true')
+    fig, ax = plt.subplots(figsize=(20, 20))
+    ax.matshow(cm, cmap=plt.cm.Spectral_r)
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            ax.text(x=j, y=i, s=round(cm[i, j], 2), va='center', ha='center', size='xx-large')
+    plt.xlabel('Predictions', fontsize=18)
+    plt.ylabel('Actuals', fontsize=18)
+    plt.title('Confusion Matrix', fontsize=18)
+    plt.xticks(range(len(labels)), [''] + labels, rotation='vertical', fontsize=18)
+    plt.yticks(range(len(labels)), [''] + labels, fontsize=18)
+    plt.tight_layout()
+    plt.savefig(filename)
