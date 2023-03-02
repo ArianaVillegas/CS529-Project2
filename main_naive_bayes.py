@@ -20,6 +20,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     labels = np.array(pd.read_csv(args.labels, sep=' ', names=['name'])['name'])
+    vocabulary = np.array(pd.read_csv(args.vocabulary, sep=' ', names=['name'])['name'])
     
     train_array = read_large_df(args.train_file)
     train_x, train_y = train_array[:,1:-1], train_array[:,-1]
@@ -30,7 +31,7 @@ if __name__ == '__main__':
     b_std = []
     b_val = [0.00001, 0.0001, 0.001, 0.01, 0.1, 1]
     for b in b_val:
-        scores = cross_validation_split(train_x, train_y, NaiveBayes(beta=b))
+        scores = cross_validation_split(train_x, train_y, NaiveBayes(beta=b), n_splits=5)
         acc = np.mean(scores * 100)
         std = np.std(scores * 100)
         b_acc.append(acc)
@@ -54,7 +55,7 @@ if __name__ == '__main__':
     train_y = train_y.toarray()
     val_y = val_y.toarray()
     
-    model = NaiveBayes(beta=0.01)
+    model = NaiveBayes()
     model.train(train_x, train_y)
     train_pred = model.eval(train_x)
     val_pred = model.eval(val_x)
@@ -62,6 +63,10 @@ if __name__ == '__main__':
     print(f'Val accuracy: {np.round((val_y==val_pred).mean()*100, 2)}%')
     
     plot_confussion_matrix(val_y, val_pred, labels, 'cm_naive_bayes.png')
+    
+    sort_idx = model.rank_words(topk=20)
+    words = vocabulary[sort_idx]
+    print(words)
         
     test_array = read_large_df(args.test_file)
     test_idx, test_x = test_array[:,0].toarray(), test_array[:,1:]

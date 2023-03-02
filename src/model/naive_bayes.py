@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import entropy
 
 
 def MLE(labels):
@@ -58,18 +59,22 @@ class NaiveBayes:
     
     def __init__(self, beta=None):
         self.beta = beta
+        self.mle = None
+        self.map = None
+        self.weight = None
     
     def train(self, x, y):
         """
-        Train NaiveBayes Classifier with a training dataframe.
+        Train NaiveBayes Classifier with a training dataframe, and store
+        the log values to avoid recalculating them in evaluation phase.
         
         Parameters
         ----------
-        x : dataframe of data
-        y : dataframe of labels
+        x : dataframe of data.
+        y : dataframe of labels.
         """
-        self.df_mle = np.log2(MLE(y))
-        self.df_map = np.log2(MAP(x, y, self.beta))
+        self.df_mle = MLE(y)
+        self.df_map = MAP(x, y, self.beta)
         
     def eval(self, x):
         """
@@ -77,14 +82,34 @@ class NaiveBayes:
         
         Parameters
         ----------
-        x : dataframe of data
+        x : dataframe of data.
         
         Returns
         -------
         y: dataframe with labels column.
         """
-        product = x.dot(self.df_map.T)
-        add = np.add(product, self.df_mle)
+        log_mle = np.log2(self.df_mle)
+        log_map = np.log2(self.df_map)
+        product = x.dot(log_map.T)
+        add = np.add(product, log_mle)
         y = np.reshape(np.argmax(add, axis=1), newshape=(x.shape[0], 1))
         return y + 1
+    
+    def rank_words(self, topk=100):
+        """
+        Rank words based in the impurity of each word. To measure impurtiy we
+        use the Gini index after normalizing probabilities per word to sum up
+        1. 
         
+        Parameters
+        ----------
+        topk : the number or words index that should be returned.
+        
+        Returns
+        -------
+        sort_idx: index of the words ranked by influence of the optimizer.
+        """
+        self.weight = self.df_map / self.df_map.sum(axis=0)
+        self.weight = -1*np.power(self.weight, 2).sum(axis=0)
+        sort_idx = np.argsort(self.weight)[:topk]
+        return sort_idx
