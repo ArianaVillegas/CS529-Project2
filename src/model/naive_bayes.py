@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.stats import entropy
 
 
 def MLE(labels):
@@ -95,7 +94,7 @@ class NaiveBayes:
         y = np.reshape(np.argmax(add, axis=1), newshape=(x.shape[0], 1))
         return y + 1
     
-    def rank_words(self, topk=100):
+    def rank_words(self, topk=100, imp_type='gini'):
         """
         Rank words based in the impurity of each word. To measure impurtiy we
         use the Gini index after normalizing probabilities per word to sum up
@@ -104,12 +103,18 @@ class NaiveBayes:
         Parameters
         ----------
         topk : the number or words index that should be returned.
+        imp_type : impurity metric. Default: gini.
         
         Returns
         -------
         sort_idx: index of the words ranked by influence of the optimizer.
         """
         self.weight = self.df_map / self.df_map.sum(axis=0)
-        self.weight = -1*np.power(self.weight, 2).sum(axis=0)
-        sort_idx = np.argsort(self.weight)[:topk]
+        if imp_type == 'gini':
+            self.weight = np.power(self.weight, 2).sum(axis=0)
+        elif imp_type == 'entropy':
+            self.weight = np.multiply(self.weight, np.log2(self.weight)).sum(axis=0)
+        else:
+            return Exception(f'Impurity type {imp_type} not defined')
+        sort_idx = np.argsort(self.weight)[::-1][:topk]
         return sort_idx
