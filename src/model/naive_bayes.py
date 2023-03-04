@@ -63,6 +63,9 @@ class NaiveBayes:
         self.weight = None
     
     def train(self, x, y):
+        print(x[100])
+        #self.w = np.random.rand(np.unique(y).size -1, x[0].size + 1)
+        #print(self.w.shape)
         """
         Train NaiveBayes Classifier with a training dataframe, and store
         the log values to avoid recalculating them in evaluation phase.

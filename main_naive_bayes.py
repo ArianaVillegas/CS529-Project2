@@ -24,6 +24,7 @@ if __name__ == '__main__':
     
     train_array = read_large_df(args.train_file)
     train_x, train_y = train_array[:,1:-1], train_array[:,-1]
+ #   print(np.unique(train_y[1]))
     scores = cross_validation_split(train_x, train_y, NaiveBayes())
     print(f'Accuracy: {np.round(np.mean(scores)*100, 2)}%')
     
