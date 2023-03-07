@@ -9,7 +9,7 @@ class LogisticRegression:
     Parameters
     ----------
     lr : learning rate for gradient descent.
-    reg : Regularization
+    reg : Regularization parameter
     """
 
     def __init__(self, lr = 0.01, reg=0.5):
@@ -24,15 +24,19 @@ class LogisticRegression:
 
     def prediction(self, x):
         # previous calculations
-        #calculation =  np.exp(self.w0 + np.dot(self.w, np.transpose(x)))
         first_factor = np.exp(self.w0 + np.matmul(x, np.transpose(self.w)))
         second_factor = (np.sum(first_factor,axis=1)).reshape(-1,1)        
         probs = first_factor/(1+second_factor)
-        probs = np.concatenate(probs[:,:-1], 1/(1+second_factor)) # concatenate all but the last class.
-        # Calculate probabilities for all classes
-        #probs = calculation/(1+np.sum(calculation))
-        #probs = np.append(probs, 1/(1+np.sum(calculation)))
+        probs = np.concatenate(probs[:,:-1], 1/(1+second_factor)) # concatenate all but the last class
         return probs
+
+    def eval(self,x):
+        probs = self.prediction(x)
+        max_index = np.argmax(probs,axis=1)
+        one_hot = np.zeros_like(probs)
+        one_hot[np.arange(probs.shape[0]),max_index] = 1
+        return one_hot
+
 
     def fit(self, x, y, iterations=1000):
         # Initialize weights matrix
