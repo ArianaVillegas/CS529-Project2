@@ -63,7 +63,7 @@ class NaiveBayes:
         self.weight = None
     
     def train(self, x, y):
-        print(x[100])
+        #print(x[100])
         #self.w = np.random.rand(np.unique(y).size -1, x[0].size + 1)
         #print(self.w.shape)
         """
@@ -110,14 +110,17 @@ class NaiveBayes:
         
         Returns
         -------
-        sort_idx: index of the words ranked by influence of the optimizer.
+        sort_i  dx: index of the words ranked by influence of the optimizer.
         """
+        print(self.df_map.sum(axis=1))
+        print(self.df_map.sum(axis=0).shape)
         self.weight = self.df_map / self.df_map.sum(axis=0)
+        print(self.weight.shape)
         if imp_type == 'gini':
             self.weight = np.power(self.weight, 2).sum(axis=0)
         elif imp_type == 'entropy':
             self.weight = np.multiply(self.weight, np.log2(self.weight)).sum(axis=0)
         else:
             return Exception(f'Impurity type {imp_type} not defined')
-        sort_idx = np.argsort(self.weight)[::-1][:topk]
+        sort_idx = np.argsort(self.weight)[:topk]
         return sort_idx

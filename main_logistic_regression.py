@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.sparse import csr_matrix, save_npz, load_npz
+import torch
 
 from sklearn.model_selection import train_test_split
 
@@ -28,12 +29,13 @@ if __name__ == '__main__':
     train_x, train_y = train_array[:,1:-1], train_array[:,-1]
 
     # Converting to one hot ecoding
-    n_classes = train_y.shape[1]
-    onehot = np.zeros((train_y.shape[0], n_classes))
-    onehot[train_y.row, train_y.col] = 1
-    train_y = csr_matrix(onehot)
-
- #   print(np.unique(train_y[1]))
+    train_y = train_y.toarray().flatten().astype(int)
+    #print(train_y[0])
+    train_y = torch.from_numpy(train_y)
+    train_y = torch.nn.functional.one_hot(train_y)
+    train_y = csr_matrix(train_y)[:, 1:]
+    #print(train_y[0])
+    '''
     scores = cross_validation_split(train_x, train_y, LogisticRegression())
     print(f'Accuracy: {np.round(np.mean(scores)*100, 2)}%')
 
@@ -59,7 +61,7 @@ if __name__ == '__main__':
     plt.yticks(fontsize=18)
     plt.tight_layout()
     plt.savefig('acc_naive_bayes.png')
-    
+    '''
     
     train_x, val_x, train_y, val_y = train_test_split(train_x, train_y, test_size=0.3, random_state=42)
     train_y = train_y.toarray()
