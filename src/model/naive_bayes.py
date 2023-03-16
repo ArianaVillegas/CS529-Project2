@@ -63,9 +63,6 @@ class NaiveBayes:
         self.weight = None
     
     def train(self, x, y):
-        #print(x[100])
-        #self.w = np.random.rand(np.unique(y).size -1, x[0].size + 1)
-        #print(self.w.shape)
         """
         Train NaiveBayes Classifier with a training dataframe, and store
         the log values to avoid recalculating them in evaluation phase.
@@ -112,10 +109,8 @@ class NaiveBayes:
         -------
         sort_i  dx: index of the words ranked by influence of the optimizer.
         """
-        print(self.df_map.sum(axis=1))
-        print(self.df_map.sum(axis=0).shape)
-        self.weight = self.df_map / self.df_map.sum(axis=0)
-        print(self.weight.shape)
+        prob = (self.df_map.T * self.df_mle).T
+        self.weight = prob / prob.sum(axis=0)
         if imp_type == 'gini':
             self.weight = np.power(self.weight, 2).sum(axis=0)
         elif imp_type == 'entropy':

@@ -32,7 +32,7 @@ if __name__ == '__main__':
     b_std = []
     b_val = [0.00001, 0.0001, 0.001, 0.01, 0.1, 1]
     for b in b_val:
-        scores = cross_validation_split(train_x, train_y, NaiveBayes(beta=b), n_splits=5)
+        scores = cross_validation_split(train_x, train_y, NaiveBayes(beta=b), n_splits=10)
         acc = np.mean(scores * 100)
         std = np.std(scores * 100)
         b_acc.append(acc)
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     
     plot_confussion_matrix(val_y, val_pred, labels, 'cm_naive_bayes.png')
     
-    sort_idx = model.rank_words(topk=20)
+    sort_idx = model.rank_words(topk=100)
     words = vocabulary[sort_idx]
     print(words)
         
