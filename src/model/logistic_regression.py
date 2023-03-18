@@ -18,6 +18,7 @@ class LogisticRegression:
         return
     
     def gradient_descent(self, x, y, ypred):
+        #x = np.insert(x,0,np.random.rand(self.n_clasess), axis=1)
         grad = (np.matmul(np.transpose(y-ypred),x))
         self.w = self.w +  self.lr*grad - self.lr*self.reg*self.w
         return
@@ -26,7 +27,7 @@ class LogisticRegression:
     def prediction(self, x):
         # previous calculations
       #  x = x.toarray()
-        first_factor = np.exp(self.w0 + np.matmul(x,self.w.T))
+        first_factor = np.exp(self.w[:,0] + np.matmul(x,self.w[:,1:].T))
         second_factor = (np.sum(first_factor,axis=1)).reshape(-1,1)
         probs = first_factor/(1+second_factor)
         last_prob = 1/(1+second_factor)
@@ -42,14 +43,15 @@ class LogisticRegression:
         return one_hot
 
 
-    def train(self, x, y, iterations=100):
+    def train(self, x, y, iterations=10):
         # Initialize weights matrix
        # print(x.shape)
         #print(y.shape)
         n_rows = len(y[0])
+        self.n_clasess= n_rows
         n_columns = (x[0].T.shape)[0]
-        self.w0 = np.random.rand(n_rows)
-        self.w = np.random.rand(n_rows,n_columns)
+        #self.w0 = np.random.rand(n_rows)
+        #self.w = np.random.rand(n_rows,n_columns+1)
         #print(self.w.shape)
         x = x.toarray()
         for i in range(iterations):
