@@ -11,6 +11,15 @@ from src.model import LogisticRegression
 from src.load import read_large_df
 from src.utils import plot_confussion_matrix, cross_validation_split
 
+def accuracy(train_pred, train_y):
+    pred_labels = np.argmax(train_y, axis=1)
+    target_labels = np.argmax(train_pred, axis=1)
+    correct = np.sum(pred_labels == target_labels)
+    total = train_pred.shape[0]
+    acc = correct / total
+    return acc
+    
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Document Classifier with Naive Bayes')
@@ -30,11 +39,11 @@ if __name__ == '__main__':
 
     # Converting to one hot ecoding
     train_y = train_y.toarray().flatten().astype(int)
-    #print(train_y[0])
     train_y = torch.from_numpy(train_y)
     train_y = torch.nn.functional.one_hot(train_y)
     train_y = csr_matrix(train_y)[:, 1:]
-    #print(train_y[0])
+    
+
     '''
     scores = cross_validation_split(train_x, train_y, LogisticRegression())
     print(f'Accuracy: {np.round(np.mean(scores)*100, 2)}%')
@@ -66,20 +75,26 @@ if __name__ == '__main__':
     train_x, val_x, train_y, val_y = train_test_split(train_x, train_y, test_size=0.3, random_state=42)
     train_y = train_y.toarray()
     val_y = val_y.toarray()
-    
+
+
+    ''' Training the model '''
     model = LogisticRegression()
     model.train(train_x, train_y)
     train_pred = model.eval(train_x)
     val_pred = model.eval(val_x)
-    print(f'Train accuracy: {np.round((train_y==train_pred).mean()*100, 2)}%')
-    print(f'Val accuracy: {np.round((val_y==val_pred).mean()*100, 2)}%')
     
-    plot_confussion_matrix(val_y, val_pred, labels, 'cm_logistric_regression.png')
+
+    ''' Printing the accuracy '''
+    print("Train accuracy accuracy: " + str(accuracy(train_pred,train_y)*100))
+    print("Val accuracy: " + str(accuracy(val_pred, val_y)*100))
+    
+    #plot_confussion_matrix(val_y, val_pred, labels, 'cm_logistric_regression.png')
+    
     '''
     sort_idx = model.rank_words(topk=20)
     words = vocabulary[sort_idx]
     print(words)
-        
+
     test_array = read_large_df(args.test_file)
     test_idx, test_x = test_array[:,0].toarray(), test_array[:,1:]
     test_pred = model.eval(test_x)
