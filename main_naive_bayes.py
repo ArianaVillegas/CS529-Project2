@@ -19,14 +19,26 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     
+    # 
+    # READ DATA
+    # 
+    
     labels = np.array(pd.read_csv(args.labels, sep=' ', names=['name'])['name'])
     vocabulary = np.array(pd.read_csv(args.vocabulary, sep=' ', names=['name'])['name'])
     
     train_array = read_large_df(args.train_file)
     train_x, train_y = train_array[:,1:-1], train_array[:,-1]
- #   print(np.unique(train_y[1]))
+    
+    # 
+    # INITIAL TEST WITH CROSS VALIDATION
+    # 
+    
     scores = cross_validation_split(train_x, train_y, NaiveBayes())
     print(f'Accuracy: {np.round(np.mean(scores)*100, 2)}%')
+    
+    # 
+    # TEST WITH DIFFERENT B VALUES
+    # 
     
     b_acc = []
     b_std = []
@@ -43,7 +55,6 @@ if __name__ == '__main__':
     plt.fill_between(np.array(b_val), np.array(b_acc) - np.array(b_std), np.array(b_acc) + np.array(b_std), alpha=0.2)
     plt.xscale('log')
     plt.xlim(right=8)
-    # plt.ylim(bottom=83.5)
     plt.xlabel('Beta', fontsize=18)
     plt.ylabel('Accuracy', fontsize=18)
     plt.xticks(fontsize=18)
@@ -51,10 +62,13 @@ if __name__ == '__main__':
     plt.tight_layout()
     plt.savefig('acc_naive_bayes.png')
     
-    
     train_x, val_x, train_y, val_y = train_test_split(train_x, train_y, test_size=0.3, random_state=42)
     train_y = train_y.toarray()
     val_y = val_y.toarray()
+    
+    # 
+    # PLOT CONFUSSION MATRIX WITH DEFAULT BETA FOR NAIVE BAYES
+    # 
     
     model = NaiveBayes()
     model.train(train_x, train_y)
@@ -64,6 +78,10 @@ if __name__ == '__main__':
     print(f'Val accuracy: {np.round((val_y==val_pred).mean()*100, 2)}%')
     
     plot_confussion_matrix(val_y, val_pred, labels, 'cm_naive_bayes.png')
+    
+    # 
+    # RANK WORDS
+    # 
     
     sort_idx = model.rank_words(topk=100)
     words = vocabulary[sort_idx]
