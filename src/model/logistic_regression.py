@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 import scipy.sparse as sp
+import time
+from sklearn.preprocessing import OneHotEncoder, MaxAbsScaler
 
 def normalize_array(arr, epsilon=1):
     """
@@ -22,62 +24,82 @@ class LogisticRegression:
     reg : Regularization parameter
     """
 
-    def __init__(self, lr = 0.01, reg=0.5):
+    def __init__(self, lr = 0.01, reg=0.1):
         self.lr = lr
         self.reg = reg
         return
     
     def gradient_descent(self, x, y, ypred):
         rest = y - ypred
-        grad = rest.transpose() @ x
+        grad = rest.T @ x
         self.w = self.w +  self.lr*grad - self.lr*self.reg*self.w
         return
-    
+
 
     def prediction(self, x):
         
-        first_factor = x @ self.w.T
-        first_factor = sp.csr_matrix(np.exp(first_factor.toarray()))
-        second_factor = (np.sum(first_factor,axis=1)).reshape(-1,1)
-        probs = first_factor/(1+second_factor)
-        last_prob = 1/(1+second_factor)
-        probs = np.concatenate((probs[:,:-1], last_prob), axis=1)
-        return probs
+        first_factor = self.w @ x.transpose()
+        print(np.max(first_factor))
+        print(np.min(first_factor))
+        #first_factor = np.clip(a_min=None,a_max=700,a=first_factor)
+
+        first_factor = np.exp(first_factor)
+        #print(np.max(first_factor.toarray()))
+        #print(np.max(first_factor.toarray()))
+        #first_factor = np.exp(first_factor)
+        #second_factor = (np.sum(first_factor,axis=1)).reshape(-1,1)
+        #probs = first_factor/(1+second_factor)
+        #last_prob = 1/(1+second_factor)
+        first_factor[-1] = np.ones(first_factor.shape[1])
+        probs = first_factor/np.sum(first_factor,axis=0)
+        #probs = np.concatenate((probs[:,:-1], last_prob), axis=1)
+        return probs.T
 
     def eval(self,x):
         x = x.toarray()
         x = normalize_array(x)
+        #x = MaxAbsScaler().fit_transform(x)
         x = np.insert(x,0,np.ones(len(x)), axis=1)
         x = sp.csr_matrix(x)
         probs = self.prediction(x)
         probs = np.array(probs)
-        max_index = np.argmax(probs,axis=1)
-        one_hot = np.zeros_like(probs)
-        one_hot[np.arange(probs.shape[0]),max_index] = 1
-        return one_hot
+        print(f"probs shape: {probs.shape}")
+        indexs = np.argmax(probs,axis=1) + 1
+        print(f"index shape: {indexs.shape}")
+        #one_hot = np.zeros_like(probs)
+        #one_hot[np.arange(probs.shape[0]),max_index] = 1
+        return indexs
 
 
     def train(self, x, y, iterations=100):
-        x = x.toarray()
+        
+        #x = MaxAbsScaler().fit_transform(x)        
         x = normalize_array(x)
+        y = OneHotEncoder().fit_transform(y)
         # Initialize weights matrix
-        n_rows = len(y[0])  
+        n_rows = y.shape[1]  
         self.n_clasess= n_rows
         n_columns = (x[0].T.shape)[0]
-        self.w = np.random.rand(n_rows,n_columns+1)
-        self.w = sp.csr_matrix(self.w)
-        x = np.insert(x,0,np.ones(len(y)), axis=1)
-
+        #self.w = np.random.rand(n_rows,n_columns+1)
+        self.w = sp.random(n_rows,n_columns+1, density=0.3).toarray()
+        print(f"max: {np.max(self.w)}")
+        print(f"min: {np.min(self.w)}")
+        x = sp.hstack([x,sp.csr_matrix(np.ones((y.shape[0],1)))])
         # Convert to sparse matrix
-        x = sp.csr_matrix(x)
-        y = sp.csr_matrix(y)
-        print(self.w[:,1])
+        #y = sp.csr_matrix(y)
+        #print(self.w[:,1])
+        start_time=time.time()
+        print(f"x shape: {x.shape}")
+        print(f"y shape: {y.shape}")
+        
         
         for i in range(iterations):
             # Predictions 
             y_pred = self.prediction(x)
-            y_pred = sp.csr_matrix(y_pred)
+            #y_pred = sp.csr_matrix(y_pred)
             # Gradient Descent 
             self.gradient_descent(x,y,y_pred)
-        print(self.w[:,1])
+        end_time = time.time()
+        total_time = end_time - start_time
+        print(f"Total training time taken for {iterations} iterations: {total_time:.6f} seconds")
         return  

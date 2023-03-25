@@ -4,6 +4,27 @@ from sklearn.model_selection import KFold
 from sklearn.metrics import confusion_matrix
 
 
+def accuracy(train_pred, train_y):
+    pred_labels = np.argmax(train_y, axis=1)
+    target_labels = np.argmax(train_pred, axis=1)
+    correct = np.sum(pred_labels == target_labels)
+    total = train_pred.shape[0]
+    acc = correct / total
+    return acc
+
+def cross_validation_split_logistic(X, y, model, n_splits=10):
+    cv = KFold(n_splits=n_splits, random_state=42, shuffle=True)
+    scores = []
+    for train_ix, val_ix in cv.split(X):
+        X_train, X_val = X[train_ix, :], X[val_ix, :]
+        y_train, y_val = y[train_ix], y[val_ix]
+        y_train = y_train.toarray()
+        y_val = y_val.toarray()
+        model.train(X_train, y_train)
+        y_val_pred = model.eval(X_val)
+        scores.append()
+    return np.array(scores)
+
 def cross_validation_split(X, y, model, n_splits=10):
     cv = KFold(n_splits=n_splits, random_state=42, shuffle=True)
     scores = []
@@ -14,7 +35,7 @@ def cross_validation_split(X, y, model, n_splits=10):
         y_val = y_val.toarray()
         model.train(X_train, y_train)
         y_val_pred = model.eval(X_val)
-        scores.append((y_val==y_val_pred).mean())
+        scores.append((y_val.flatten()==y_val_pred).mean())
     return np.array(scores)
 
 

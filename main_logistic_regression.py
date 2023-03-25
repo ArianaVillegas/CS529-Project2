@@ -4,21 +4,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.sparse import csr_matrix, save_npz, load_npz
 import torch
-import time
+
 
 from sklearn.model_selection import train_test_split
 
 from src.model import LogisticRegression
 from src.load import read_large_df
-from src.utils import plot_confussion_matrix, cross_validation_split
+from src.utils import plot_confussion_matrix, cross_validation_split_logistic,cross_validation_split ,accuracy
 
-def accuracy(train_pred, train_y):
-    pred_labels = np.argmax(train_y, axis=1)
-    target_labels = np.argmax(train_pred, axis=1)
-    correct = np.sum(pred_labels == target_labels)
-    total = train_pred.shape[0]
-    acc = correct / total
-    return acc
+
     
 
 
@@ -42,10 +36,7 @@ if __name__ == '__main__':
     np.random.seed(3) #set numpy random seed    
 
     # Converting to one hot ecoding
-    train_y = train_y.toarray().flatten().astype(int)
-    train_y = torch.from_numpy(train_y)
-    train_y = torch.nn.functional.one_hot(train_y)
-    train_y = csr_matrix(train_y)[:, 1:]
+    
     
     train_x, val_x, train_y, val_y = train_test_split(train_x, train_y, test_size=0.3, random_state=42)
     train_y = train_y.toarray()
@@ -55,9 +46,14 @@ if __name__ == '__main__':
     #scores = cross_validation_split(train_x, train_y, LogisticRegression())
     #print(f'Accuracy: {np.round(np.mean(scores)*100, 2)}%')
     
+
+    '''
     b_acc = []
     b_std = []
-    lr_val = [0.001, 0.01, 0.1, 1]
+    lr_val = [0.001, 0.01]
+    reg_val = [0.01, 0.001]
+    iterations=1000
+
     for lr in lr_val:
         scores = cross_validation_split(train_x, train_y, LogisticRegression(lr=lr), n_splits=4)
         acc = np.mean(scores * 100)
@@ -77,29 +73,26 @@ if __name__ == '__main__':
     plt.yticks(fontsize=18)
     plt.tight_layout()
     plt.savefig('acc_logistic_regression.png')
-    
+    '''
     
     ''' Training the model '''
-    
-    
-    '''
+  
     model = LogisticRegression()
-    num_iterations = 100
-    start_time=time.time()
+    num_iterations = 1000
     model.train(train_x, train_y, iterations=num_iterations)
-    end_time = time.time()
-    total_time = end_time - start_time
-    print(f"Total training time taken for {num_iterations} iterations: {total_time:.6f} seconds")
-
+    
     train_pred = model.eval(train_x)
     val_pred = model.eval(val_x)
     
-     Printing the accuracy 
-    print("Train accuracy accuracy: " + str(accuracy(train_pred,train_y)*100))
-    print("Val accuracy: " + str(accuracy(val_pred, val_y)*100))
+    # Printing the accuracy 
+    print(f'Train accuracy: {np.round((train_y.flatten()==train_pred).mean()*100, 2)}%')
+    print(f'Val accuracy: {np.round((val_y.flatten()==val_pred).mean()*100, 2)}%')
     
+   # print("Train accuracy accuracy: " + str(accuracy(train_pred,train_y)*100))
+   # print("Val accuracy: " + str(accuracy(val_pred, val_y)*100))
+
     #plot_confussion_matrix(val_y, val_pred, labels, 'cm_logistric_regression.png')
-    '''
+    
     '''
     sort_idx = model.rank_words(topk=20)
     words = vocabulary[sort_idx]
