@@ -7,6 +7,7 @@ import torch
 
 
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MaxAbsScaler
 
 from src.model import LogisticRegression
 from src.load import read_large_df
@@ -31,6 +32,8 @@ if __name__ == '__main__':
     
     train_array = read_large_df(args.train_file)
     train_x, train_y = train_array[:,1:-1], train_array[:,-1]
+    train_x = MaxAbsScaler().fit_transform(train_x)
+    train_y = train_y.toarray()
 
 
     np.random.seed(3) #set numpy random seed    
@@ -39,8 +42,6 @@ if __name__ == '__main__':
     
     
     train_x, val_x, train_y, val_y = train_test_split(train_x, train_y, test_size=0.3, random_state=42)
-    train_y = train_y.toarray()
-    val_y = val_y.toarray()
 
     
     #scores = cross_validation_split(train_x, train_y, LogisticRegression())
@@ -78,15 +79,15 @@ if __name__ == '__main__':
     ''' Training the model '''
   
     model = LogisticRegression()
-    num_iterations = 1000
+    num_iterations = 500
     model.train(train_x, train_y, iterations=num_iterations)
     
     train_pred = model.eval(train_x)
     val_pred = model.eval(val_x)
     
     # Printing the accuracy 
-    print(f'Train accuracy: {np.round((train_y.flatten()==train_pred).mean()*100, 2)}%')
-    print(f'Val accuracy: {np.round((val_y.flatten()==val_pred).mean()*100, 2)}%')
+    print(f'Train accuracy: {np.round((train_y==train_pred).mean()*100, 2)}%')
+    print(f'Val accuracy: {np.round((val_y==val_pred).mean()*100, 2)}%')
     
    # print("Train accuracy accuracy: " + str(accuracy(train_pred,train_y)*100))
    # print("Val accuracy: " + str(accuracy(val_pred, val_y)*100))
