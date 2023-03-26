@@ -38,9 +38,10 @@ class LogisticRegression:
 
     def prediction(self, x):
         first_factor = self.w @ x.transpose()
-        first_factor = np.exp(first_factor)
-        first_factor[-1] = np.ones(x.shape[0])
-        probs = first_factor/np.sum(first_factor, axis=0)
+        first_factor -= np.max(first_factor, axis=0)
+        log_den = np.log(np.sum(np.exp(first_factor), axis=0))
+        probs = first_factor - log_den
+        probs = np.exp(probs)
         return probs.T
 
     def eval(self,x):
@@ -55,7 +56,7 @@ class LogisticRegression:
         # Initialize weights matrix
         n_rows = y.shape[1]
         n_columns = x.shape[1]
-        self.w = sp.random(n_rows, n_columns+1, density=0.3).toarray()
+        self.w = sp.random(n_rows, n_columns+1, density=0.25).toarray()
         x = sp.hstack([x,sp.csr_matrix(np.ones((y.shape[0],1)))])
         start_time=time.time()
         interval = iterations//10

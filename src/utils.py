@@ -31,11 +31,9 @@ def cross_validation_split(X, y, model, n_splits=10):
     for train_ix, val_ix in cv.split(X):
         X_train, X_val = X[train_ix, :], X[val_ix, :]
         y_train, y_val = y[train_ix], y[val_ix]
-        y_train = y_train.toarray()
-        y_val = y_val.toarray()
         model.train(X_train, y_train)
         y_val_pred = model.eval(X_val)
-        scores.append((y_val.flatten()==y_val_pred).mean())
+        scores.append((y_val==y_val_pred).mean())
     return np.array(scores)
 
 

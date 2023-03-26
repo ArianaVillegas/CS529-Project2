@@ -44,8 +44,9 @@ if __name__ == '__main__':
     train_x, val_x, train_y, val_y = train_test_split(train_x, train_y, test_size=0.3, random_state=42)
 
     
-    #scores = cross_validation_split(train_x, train_y, LogisticRegression())
-    #print(f'Accuracy: {np.round(np.mean(scores)*100, 2)}%')
+    scores = cross_validation_split(train_x, train_y, LogisticRegression())
+    print(scores)
+    print(f'Accuracy: {np.round(np.mean(scores)*100, 2)}%')
     
 
     '''
@@ -79,7 +80,7 @@ if __name__ == '__main__':
     ''' Training the model '''
   
     model = LogisticRegression()
-    num_iterations = 500
+    num_iterations = 100
     model.train(train_x, train_y, iterations=num_iterations)
     
     train_pred = model.eval(train_x)
