@@ -1,6 +1,6 @@
 # CS529-Project2
 
-Integrantes: 
+Integrants: 
  - Ariana Villegas
  - Enrique Sobrados
 
