@@ -4,15 +4,6 @@ import scipy.sparse as sp
 import time
 from sklearn.preprocessing import OneHotEncoder, MaxAbsScaler
 
-def normalize_array(arr, epsilon=1):
-    """
-    Normalizes a 2D array by dividing each element by the sum of its corresponding column,
-    replacing any zero sums with a small value epsilon to avoid division by zero.
-    """
-    col_sums = np.sum(arr, axis=0)
-    zero_sums = np.where(col_sums == 0)[0]
-    col_sums[zero_sums] = epsilon
-    return arr / col_sums
 
 class LogisticRegression:
     """
@@ -29,13 +20,30 @@ class LogisticRegression:
         self.reg = reg
         return
     
+
+    '''
+    Evaluate the Gradient descent in each time step, calculating first the gradient
+    and performing the update formula.
+
+    Parameters
+    ----------
+    x : dataframe of data.
+    y : dataframe of labels.
+    ypred: predicted probability matrix for every class
+    '''
     def gradient_descent(self, x, y, ypred):
         rest = y - ypred
         grad = rest.T @ x
         self.w = self.w +  self.lr*grad - self.lr*self.reg*self.w
         return
 
+    '''
+    Make the prediction for every sample in the dataset.
 
+    Parameter
+    ----------
+    x : dataframe of data.
+    '''
     def prediction(self, x):
         first_factor = self.w @ x.transpose()
         first_factor -= np.max(first_factor, axis=0)
@@ -44,14 +52,31 @@ class LogisticRegression:
         probs = np.exp(probs)
         return probs.T
 
+    
+    '''
+    Return the prediction for every sample in the dataset, returning the
+    label with maximum probabily for each class.
+
+    Parameter
+    ----------
+    x : dataframe of data.
+    '''
     def eval(self,x):
         x = sp.hstack([x, sp.csr_matrix(np.ones((x.shape[0], 1)))])
         probs = self.prediction(x)
         indexs = np.argmax(probs,axis=1) + 1
         return indexs
 
+    '''
+    Funtion to train the model based on the dataframe and number of iterations.
 
-    def train(self, x, y, iterations=100):     
+    Parameter
+    ----------
+    x : dataframe of data.
+    y : dataframe of labels in one hot encoding.
+    iterations: number of iterations for training.
+    '''
+    def train(self, x, y, iterations=10):     
         y = OneHotEncoder().fit_transform(y)
         # Initialize weights matrix
         n_rows = y.shape[1]

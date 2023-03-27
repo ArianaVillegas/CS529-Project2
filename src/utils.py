@@ -12,7 +12,7 @@ def accuracy(train_pred, train_y):
     acc = correct / total
     return acc
 
-def cross_validation_split_logistic(X, y, model, n_splits=10):
+def cross_validation_split_logistic(X, y, model, n_splits=4):
     cv = KFold(n_splits=n_splits, random_state=42, shuffle=True)
     scores = []
     for train_ix, val_ix in cv.split(X):
@@ -22,7 +22,7 @@ def cross_validation_split_logistic(X, y, model, n_splits=10):
         y_val = y_val.toarray()
         model.train(X_train, y_train)
         y_val_pred = model.eval(X_val)
-        scores.append()
+        scores.append(accuracy(y_val,y_val_pred))
     return np.array(scores)
 
 def cross_validation_split(X, y, model, n_splits=10):
@@ -31,6 +31,8 @@ def cross_validation_split(X, y, model, n_splits=10):
     for train_ix, val_ix in cv.split(X):
         X_train, X_val = X[train_ix, :], X[val_ix, :]
         y_train, y_val = y[train_ix], y[val_ix]
+        y_train = y_train.toarray()
+        y_val = y_val.toarray()
         model.train(X_train, y_train)
         y_val_pred = model.eval(X_val)
         scores.append((y_val==y_val_pred).mean())
@@ -38,6 +40,8 @@ def cross_validation_split(X, y, model, n_splits=10):
 
 
 def plot_confussion_matrix(y, pred, labels, filename):
+    y = np.asarray(y)
+    pred= np.asarray(pred)
     cm = confusion_matrix(y, pred, normalize='true')
     fig, ax = plt.subplots(figsize=(20, 20))
     ax.matshow(cm, cmap=plt.cm.Spectral_r)
