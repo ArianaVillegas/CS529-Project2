@@ -1,16 +1,9 @@
 import pandas as pd
 import numpy as np
 import scipy.sparse as sp
+import time
+from sklearn.preprocessing import OneHotEncoder, MaxAbsScaler
 
-def normalize_array(arr, epsilon=1):
-    """
-    Normalizes a 2D array by dividing each element by the sum of its corresponding column,
-    replacing any zero sums with a small value epsilon to avoid division by zero.
-    """
-    col_sums = np.sum(arr, axis=0)
-    zero_sums = np.where(col_sums == 0)[0]
-    col_sums[zero_sums] = epsilon
-    return arr / col_sums
 
 class LogisticRegression:
     """
@@ -22,62 +15,84 @@ class LogisticRegression:
     reg : Regularization parameter
     """
 
-    def __init__(self, lr = 0.01, reg=0.5):
+    def __init__(self, lr = 0.01, reg=0.01):
         self.lr = lr
         self.reg = reg
         return
     
+
+    '''
+    Evaluate the Gradient descent in each time step, calculating first the gradient
+    and performing the update formula.
+
+    Parameters
+    ----------
+    x : dataframe of data.
+    y : dataframe of labels.
+    ypred: predicted probability matrix for every class
+    '''
     def gradient_descent(self, x, y, ypred):
         rest = y - ypred
-        grad = rest.transpose() @ x
+        grad = rest.T @ x
         self.w = self.w +  self.lr*grad - self.lr*self.reg*self.w
         return
-    
 
+    '''
+    Make the prediction for every sample in the dataset.
+
+    Parameter
+    ----------
+    x : dataframe of data.
+    '''
     def prediction(self, x):
-        
-        first_factor = x @ self.w.T
-        first_factor = sp.csr_matrix(np.exp(first_factor.toarray()))
-        second_factor = (np.sum(first_factor,axis=1)).reshape(-1,1)
-        probs = first_factor/(1+second_factor)
-        last_prob = 1/(1+second_factor)
-        probs = np.concatenate((probs[:,:-1], last_prob), axis=1)
-        return probs
+        first_factor = self.w @ x.transpose()
+        first_factor -= np.max(first_factor, axis=0)
+        log_den = np.log(np.sum(np.exp(first_factor), axis=0))
+        probs = first_factor - log_den
+        probs = np.exp(probs)
+        return probs.T
 
+    
+    '''
+    Return the prediction for every sample in the dataset, returning the
+    label with maximum probabily for each class.
+
+    Parameter
+    ----------
+    x : dataframe of data.
+    '''
     def eval(self,x):
-        x = x.toarray()
-        x = normalize_array(x)
-        x = np.insert(x,0,np.ones(len(x)), axis=1)
-        x = sp.csr_matrix(x)
+        x = sp.hstack([x, sp.csr_matrix(np.ones((x.shape[0], 1)))])
         probs = self.prediction(x)
-        probs = np.array(probs)
-        max_index = np.argmax(probs,axis=1)
-        one_hot = np.zeros_like(probs)
-        one_hot[np.arange(probs.shape[0]),max_index] = 1
-        return one_hot
+        indexs = np.argmax(probs,axis=1) + 1
+        return indexs
 
+    '''
+    Funtion to train the model based on the dataframe and number of iterations.
 
-    def train(self, x, y, iterations=100):
-        x = x.toarray()
-        x = normalize_array(x)
+    Parameter
+    ----------
+    x : dataframe of data.
+    y : dataframe of labels in one hot encoding.
+    iterations: number of iterations for training.
+    '''
+    def train(self, x, y, iterations=10):     
+        y = OneHotEncoder().fit_transform(y)
         # Initialize weights matrix
-        n_rows = len(y[0])  
-        self.n_clasess= n_rows
-        n_columns = (x[0].T.shape)[0]
-        self.w = np.random.rand(n_rows,n_columns+1)
-        self.w = sp.csr_matrix(self.w)
-        x = np.insert(x,0,np.ones(len(y)), axis=1)
-
-        # Convert to sparse matrix
-        x = sp.csr_matrix(x)
-        y = sp.csr_matrix(y)
-        print(self.w[:,1])
-        
+        n_rows = y.shape[1]
+        n_columns = x.shape[1]
+        self.w = sp.random(n_rows, n_columns+1, density=0.25).toarray()
+        x = sp.hstack([x,sp.csr_matrix(np.ones((y.shape[0],1)))])
+        start_time=time.time()
+        interval = iterations//10
         for i in range(iterations):
+            if i%interval == 0:
+                print(i)
             # Predictions 
             y_pred = self.prediction(x)
-            y_pred = sp.csr_matrix(y_pred)
             # Gradient Descent 
             self.gradient_descent(x,y,y_pred)
-        print(self.w[:,1])
+        end_time = time.time()
+        total_time = end_time - start_time
+        print(f"Total training time taken for {iterations} iterations: {total_time:.6f} seconds")
         return  

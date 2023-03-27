@@ -74,8 +74,8 @@ if __name__ == '__main__':
     model.train(train_x, train_y)
     train_pred = model.eval(train_x)
     val_pred = model.eval(val_x)
-    print(f'Train accuracy: {np.round((train_y==train_pred).mean()*100, 2)}%')
-    print(f'Val accuracy: {np.round((val_y==val_pred).mean()*100, 2)}%')
+    print(f'Train accuracy: {np.round((train_y.flatten()==train_pred).mean()*100, 2)}%')
+    print(f'Val accuracy: {np.round((val_y.flatten()==val_pred).mean()*100, 2)}%')
     
     plot_confussion_matrix(val_y, val_pred, labels, 'cm_naive_bayes.png')
     
