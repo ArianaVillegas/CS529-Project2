@@ -1,6 +1,6 @@
 # CS529-Project2
 
-Integrants: 
+Team: 
  - Ariana Villegas
  - Enrique Sobrados
 
@@ -31,4 +31,5 @@ python3 main_naive_bayes.py
 The plots are saved under the following names: 
 
 Logistic Regression: acc_logistic_regression.png and cm_logisitic_regression.png
+
 Naive bayes: acc_naive_bayes.png and cm_naive_bayes.png
